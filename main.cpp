@@ -321,8 +321,6 @@ void compileshader() {
                                "layout (location = 0) in vec3 aPos;\n"
                                "layout (location = 1) in vec3 aNv;\n"
                                "out vec3 nv;\n"
-                               "out float theta2;\n"
-                               "uniform float theta;\n"
                                "uniform float xs;\n"
                                "uniform float ys;\n"
                                "uniform float zs;\n"
@@ -330,23 +328,17 @@ void compileshader() {
                                "uniform mat3 rm;\n"
                                "void main() {\n"
                                "   vec3 Pos = aPos * rm;\n"
-                            //    "   float x = Pos.x * cos(theta) - Pos.z * sin(theta) + xs;\n"
-                            //    "   float z = Pos.x * sin(theta) + Pos.z * cos(theta) + zs;\n"
-                            //    "   float x = Pos.x + xs;\n"
                                "   float z = Pos.z + zs;\n"
-                            //    "   float c = 3.0f;\n"
                                "   float w = (c - z);\n"
                                "   float zzz = (-10.0f-80.1f/99.9f*100.0f)/90.0f * z + 80.1f/99.9f*c;\n"
                                "   gl_Position = vec4(Pos.x + xs, Pos.y + ys, zzz, w);\n"
                                "   nv = aNv;\n"
-                               "   theta2 = theta;\n"
                                "}\n";
     std::cout << "Vertex Shader:\n" << vertexShader << std::endl;
 
     const char *fragmentShader =  "#version 410 core\n"
                                   "out vec4 FragColor;\n"
                                   "in vec3 nv;\n"
-                                  "in float theta2;\n"
                                   "void main() {\n"
                                   "   float br;\n"
                                   "   float z = nv.z;\n"
@@ -597,7 +589,7 @@ int main(int ac, char **av) {
     init_pos();
     init_rot();
 
-    GLuint rot;
+    // GLuint rot;
     GLuint xs;
     GLuint ys;
     GLuint zs;
@@ -616,8 +608,8 @@ int main(int ac, char **av) {
         // init_rot();
         // rotm = productm3(rotm, roty(0.001));
 
-        rot = glGetUniformLocation(program, "theta");
-        glUniform1f(rot, theta);
+        // rot = glGetUniformLocation(program, "theta");
+        // glUniform1f(rot, theta);
         rm = glGetUniformLocation(program, "rm");
         glUniformMatrix3fv(rm, 1, GL_FALSE, &rotm.m[0][0]);
         xs = glGetUniformLocation(program, "xs");
