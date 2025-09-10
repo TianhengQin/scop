@@ -10,19 +10,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb.h"
 
+GLuint texture;
 GLuint program;
 unsigned int VBO, VAO;
 
-typedef struct color {
-    float r;
-    float g;
-    float b;
-} rgb;
-
-typedef struct smtl {
-    rgb aColor;
-    rgb dColor;
-} tmtl;
 
 typedef struct vec3 {
     float x;
@@ -37,11 +28,11 @@ typedef struct mat3 {
 std::vector<v3> vertices;
 std::vector<float> rendBf;
 float dcam;
-float light[2];
 float theta;
 float xshift;
 float yshift;
 float zshift;
+float tratio;
 m3 rotm;
 bool key_esc;
 bool key_r;
@@ -81,7 +72,7 @@ v3 nv(v3 a, v3 b, v3 c) {
     return normized(cross(minus(b,a),minus(c,a)));
 }
 
-void push3(int a, int b, int c) {
+void push3(int a, int b, int c, bool up) {
 
     v3 n;
     int l = vertices.size();
@@ -113,8 +104,13 @@ void push3(int a, int b, int c) {
     rendBf.push_back(n.y);
     rendBf.push_back(n.z);
 
-    rendBf.push_back(0.0f);
-    rendBf.push_back(0.0f);
+    if (up) {
+        rendBf.push_back(0.0f);
+        rendBf.push_back(0.0f);
+    } else {
+        rendBf.push_back(0.0f);
+        rendBf.push_back(0.0f);
+    }
 
     rendBf.push_back(vertices[b].x);
     rendBf.push_back(vertices[b].y);
@@ -124,8 +120,13 @@ void push3(int a, int b, int c) {
     rendBf.push_back(n.y);
     rendBf.push_back(n.z);
 
-    rendBf.push_back(0.0f);
-    rendBf.push_back(1.0f);
+    if (up) {
+        rendBf.push_back(1.0f);
+        rendBf.push_back(0.0f);
+    } else {
+        rendBf.push_back(1.0f);
+        rendBf.push_back(1.0f);
+    }
 
     rendBf.push_back(vertices[c].x);
     rendBf.push_back(vertices[c].y);
@@ -135,53 +136,13 @@ void push3(int a, int b, int c) {
     rendBf.push_back(n.y);
     rendBf.push_back(n.z);
 
-    rendBf.push_back(1.0f);
-    rendBf.push_back(1.0f);
-
-}
-
-int loadtest() {
-    // dcam = 1.0f;
-    // light[0] = 0;
-    // light[1] = 0;
-    vertices.clear();
-
-    v3 point = {-0.5f,0.1f,0.5f};
-    vertices.push_back(point);
-
-    point.z = -0.5f;
-    vertices.push_back(point);
-
-    point.x = 0.5f;
-    vertices.push_back(point);
-
-    point.z = 0.5f;
-    vertices.push_back(point);
-
-    v3 poit = {0.0f,0.8f,0.0f};
-    vertices.push_back(poit);
-
-    for(int i = 0; i < 5; i++) {
-        std::cout << vertices[i].x <<" "<< vertices[i].y <<" "<< vertices[i].z << std::endl;
+    if (up) {
+        rendBf.push_back(1.0f);
+        rendBf.push_back(1.0f);
+    } else {
+        rendBf.push_back(0.0f);
+        rendBf.push_back(1.0f);
     }
-
-    rendBf.clear();
-
-    push3(1,2,3);
-    push3(1,3,4);
-    // push3(1,4,5);
-    // push3(4,3,5);
-    // push3(2,1,5);
-    // push3(3,2,5);
-
-    for(int i = 0; i < 18; i++) {
-        for (int j = 0; j < 6; j++) {
-            std::cout << rendBf[i * 6 + j] << " ";
-        }
-        std::cout << std::endl;
-    }
-
-    return 0;
 
 }
 
@@ -247,59 +208,59 @@ int loadfile(char *file) {
         if (line[0] == 'f' && line[1] == ' ') {
             re = std::sscanf(line.c_str(), "f %d %d %d %d %d", a, a+1, a+2, a+3, a+4);
             if (re == 3) {
-                push3(a[0],a[1],a[2]);
+                push3(a[0],a[1],a[2],true);
                 continue;
             } else if (re == 4) {
-                push3(a[0],a[1],a[2]);
-                push3(a[0],a[2],a[3]);
+                push3(a[0],a[1],a[2],true);
+                push3(a[0],a[2],a[3],false);
                 continue;
             } else if (re == 5) {
-                push3(a[0],a[1],a[2]);
-                push3(a[0],a[2],a[3]);
-                push3(a[0],a[3],a[4]);
+                push3(a[0],a[1],a[2],true);
+                push3(a[0],a[2],a[3],false);
+                push3(a[0],a[3],a[4],true);
                 continue;
             }
             re = std::sscanf(line.c_str(), "f %d/%d %d/%d %d/%d %d/%d %d/%d", a, a+5, a+1, a+6, a+2, a+7, a+3, a+8, a+4, a+9);
             if (re == 6) {
-                push3(a[0],a[1],a[2]);
+                push3(a[0],a[1],a[2],true);
                 continue;
             } else if (re == 8) {
-                push3(a[0],a[1],a[2]);
-                push3(a[0],a[2],a[3]);
+                push3(a[0],a[1],a[2],true);
+                push3(a[0],a[2],a[3],false);
                 continue;
             } else if (re == 10) {
-                push3(a[0],a[1],a[2]);
-                push3(a[0],a[2],a[3]);
-                push3(a[0],a[3],a[4]);
+                push3(a[0],a[1],a[2],true);
+                push3(a[0],a[2],a[3],false);
+                push3(a[0],a[3],a[4],true);
                 continue;
             }
             re = std::sscanf(line.c_str(), "f %d//%d %d//%d %d//%d %d//%d %d//%d", a, a+10, a+1, a+11, a+2, a+12, a+3, a+13, a+4, a+14);
             if (re == 6) {
-                push3(a[0],a[1],a[2]);
+                push3(a[0],a[1],a[2],true);
                 continue;
             } else if (re == 8) {
-                push3(a[0],a[1],a[2]);
-                push3(a[0],a[2],a[3]);
+                push3(a[0],a[1],a[2],true);
+                push3(a[0],a[2],a[3],false);
                 continue;
             } else if (re == 10) {
-                push3(a[0],a[1],a[2]);
-                push3(a[0],a[2],a[3]);
-                push3(a[0],a[3],a[4]);
+                push3(a[0],a[1],a[2],true);
+                push3(a[0],a[2],a[3],false);
+                push3(a[0],a[3],a[4],true);
                 continue;
             }
             re = std::sscanf(line.c_str(), "f %d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d",
                                             a, a+5, a+10, a+1, a+6, a+11, a+2, a+7, a+12, a+3, a+8, a+13, a+4, a+9, a+14);
             if (re == 9) {
-                push3(a[0],a[1],a[2]);
+                push3(a[0],a[1],a[2],true);
                 continue;
             } else if (re == 12) {
-                push3(a[0],a[1],a[2]);
-                push3(a[0],a[2],a[3]);
+                push3(a[0],a[1],a[2],false);
+                push3(a[0],a[2],a[3],true);
                 continue;
             } else if (re == 15) {
-                push3(a[0],a[1],a[2]);
-                push3(a[0],a[2],a[3]);
-                push3(a[0],a[3],a[4]);
+                push3(a[0],a[1],a[2],true);
+                push3(a[0],a[2],a[3],false);
+                push3(a[0],a[3],a[4],true);
                 continue;
             }
             std::cout<<"!!! Achtung! Face format error / not supported: "<< line <<std::endl;
@@ -356,12 +317,14 @@ int compileshader() {
                                   "in vec3 nv;\n"
                                   "in vec2 tc;\n"
                                   "uniform sampler2D tex;\n"
+                                  "uniform float tr;\n"
                                   "void main() {\n"
                                   "   float br;\n"
+                                  "   vec4 cl;\n"
                                   "   float z = nv.z;\n"
                                   "   br = (z + 1.0f)/2.0f;\n"
-                                //   "   FragColor = vec4(1.0f * br, 1.0f * br, 1.0f * br, 1.0f);\n"
-                                  "   FragColor = texture(tex, tc);\n"
+                                  "   cl = vec4(1.0f * br, 1.0f * br, 1.0f * br, 1.0f);\n"
+                                  "   FragColor = (1.0f - tr) * cl + tr * texture(tex, tc);\n"
                                   "}\n";
     std::cout << "Fragment Shader:\n" << fragmentShader << std::endl;
 
@@ -561,21 +524,183 @@ void Events(GLFWwindow *window) {
         rotm = productm3(rotm, rotz(-0.01));
     }
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
-        dcam *= 0.99f; 
+        dcam *= 0.99f;
     } else if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
         dcam *= 1.010101f;
     }
+    if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS) {
+        if (tratio == 0.0f) {
+            tratio = 0.01f;
+        } else {
+            tratio *= 1.05263158f;
+            if (tratio > 1.0f) {
+                tratio = 1.0f;
+            }
+        }
+    } else if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
+        if (tratio < 0.01f) {
+            tratio = 0.0f;
+        } else {
+            tratio *= 0.95f;
+        }
+    }
 }
 
+int loadtexture(char *file) {
 
-int main(int ac, char **av) {
+    GLuint texid;
+    GLuint texUni;
+    std::vector<unsigned char> byte;
+    std::ifstream tex;
 
-    if (ac != 2) {
+    std::cout << "Loading texture : " <<file<< std::endl;
+    int w, h, cn;
+
+    unsigned char* bytes = stbi_load(file, &w, &h, &cn, 0);
+
+    tex.open(file);
+    if (!tex.is_open()) {
+        std::cout<<"Failed" <<std::endl;
         return 1;
     }
 
-    // (void)av;
-    // loadtest();
+    char bf;
+    int base;
+    tex.get(bf);
+    if (bf != 'B') {
+        std::cout << "BMP format error" << std::endl;
+        return 1;
+    }
+    tex.get(bf);
+    if (bf != 'M') {
+        std::cout << "BMP format error" << std::endl;
+        return 1;
+    }
+
+    for (int i=0;i<8;i++) {
+        tex.get(bf);
+    }
+
+    int offset = 0;
+    base = 1;
+    for (int i=0;i<4;i++) {
+        tex.get(bf);
+        offset += (int)*(unsigned char *)&bf * base;
+        base *= 256;
+        std::cout << offset << std::endl;
+    }
+
+    for (int i=0;i<4;i++) {
+        tex.get(bf);
+    }
+
+    int width = 0;
+    base = 1;
+    for (int i=0;i<4;i++) {
+        tex.get(bf);
+        width += (int)*(unsigned char *)&bf * base;
+        base *= 256;
+        std::cout << width << std::endl;
+    }
+
+    int height = 0;
+    base = 1;
+    for (int i=0;i<4;i++) {
+        tex.get(bf);
+        height += (int)*(unsigned char *)&bf * base;
+        base *= 256;
+        std::cout << height << std::endl;
+    }
+
+    offset -= 26;
+    for (int i=0;i<offset;i++) {
+        tex.get(bf);
+        std::cout << (int)*(unsigned char *)&bf << std::endl;
+    }
+
+    // int pad = (4 - width * 3 % 4) % 4;
+    // for (int j=0;j<height;j++) {
+    //     for (int i=0;i<width;i++) {
+    //         tex.get(bf);
+    //         byte.push_back(*(unsigned char *)&bf);
+    //         std::cout << (int)*(unsigned char *)&bf << " ";
+    //         tex.get(bf);
+    //         byte.push_back(*(unsigned char *)&bf);
+    //         std::cout << (int)*(unsigned char *)&bf<< " ";
+    //         tex.get(bf);
+    //         byte.push_back(*(unsigned char *)&bf);
+    //         std::cout << (int)*(unsigned char *)&bf<< "|";
+    //     }
+    //     for (int i=0;i<pad;i++) {
+    //         tex.get(bf);
+    //         byte.push_back(0);
+    //         std::cout << "pad ";
+    //     }
+    //     std::cout << std::endl;
+
+    // }
+
+    while (tex.get(bf)) {
+        byte.push_back(*(unsigned char *)&bf);
+    }
+    std::cout << byte.size() << std::endl;
+    std::cout << w << h << std::endl;
+    std::cout << width << height << std::endl;
+
+    int pad = (4 - width * 3 % 4) % 4 + width * 3;
+    unsigned char sw;
+    int beg;
+    for (int j=0;j<height;j++) {
+        for (int i=0;i<width;i++) {
+            beg = pad * j + i * 3;
+            sw = byte[beg];
+            byte[beg] = byte[beg + 2];
+            byte[beg + 2] = sw;
+        }
+    }
+
+    // textbyte.data();
+    // std::cout << w << " " << h << " " << cn << std::endl;
+    // int text;
+    // for (text = 0; text < 50; text++) {
+    //     std::cout << text << " " << (int)bytes[text*3] << " " << (int)bytes[text*3+1] << " " << (int)bytes[text*3+2] << std::endl;
+    // }
+
+    glGenTextures(1, &texid);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texid);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, byte.data());
+
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    stbi_image_free(bytes);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    texUni = glGetUniformLocation(program, "tex");
+    glUseProgram(program);
+    glUniform1i(texUni, 0);
+    std::cout<<"Texture loaded"<<std::endl;
+    texture = texid;
+
+    return 0;
+}
+
+int main(int ac, char **av) {
+
+    if (ac != 3) {
+        std::cout << "scop [object] [texture]" << std::endl;
+        return 1;
+    }
+
     if (loadfile(av[1]))
         return 1;
 
@@ -616,63 +741,35 @@ int main(int ac, char **av) {
     dcam = 8.0f;
     key_esc = false;
     key_r = false;
+    tratio = 0.0f;
 
     init_pos();
     init_rot();
 
-    // GLuint rot;
     GLuint xs;
     GLuint ys;
     GLuint zs;
     GLuint rm;
     GLuint cm;
-
-    GLuint texid;
-    GLuint texUni;
+    GLuint tr;
 
     int bfsize = rendBf.size()/8;
 
-    std::cout<<"Loading texture ..."<<std::endl;
-    int w, h, cn;
-    unsigned char* bytes = stbi_load("resources/cat4.bmp", &w, &h, &cn, 0);
-
-    std::cout<<bytes[0]<<std::endl;
-
-	glGenTextures(1, &texid);
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texid);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, bytes);
-
-	glGenerateMipmap(GL_TEXTURE_2D);
-
-	stbi_image_free(bytes);
-
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-    texUni = glGetUniformLocation(program, "tex");
-    glUseProgram(program);
-    glUniform1i(texUni, 0);
-    std::cout<<"Texture loaded"<<std::endl;
-
+    if (loadtexture(av[2])) {
+        glDeleteProgram(program);
+        glDeleteVertexArrays(1, &VAO);
+        glDeleteBuffers(1, &VBO);
+        glfwDestroyWindow(window);
+        glfwTerminate();
+        return 1;
+    }
 
     rm = glGetUniformLocation(program, "rm");
-    // glUniformMatrix3fv(rm, 1, GL_FALSE, &rotm.m[0][0]);
     xs = glGetUniformLocation(program, "xs");
-    // glUniform1f(xs, xshift);
     ys = glGetUniformLocation(program, "ys");
-    // glUniform1f(ys, yshift);
     zs = glGetUniformLocation(program, "zs");
-    // glUniform1f(zs, zshift);
     cm = glGetUniformLocation(program, "c");
-    // glUniform1f(cm, dcam);
+    tr = glGetUniformLocation(program, "tr");
 
 
     while (!glfwWindowShouldClose(window)) {
@@ -682,28 +779,15 @@ int main(int ac, char **av) {
 
         Events(window);
 
-        // init_rot();
-        // rotm = productm3(rotm, roty(0.001));
-
-        // rot = glGetUniformLocation(program, "theta");
-        // glUniform1f(rot, theta);
-
-        // rm = glGetUniformLocation(program, "rm");
         glUniformMatrix3fv(rm, 1, GL_FALSE, &rotm.m[0][0]);
-        // xs = glGetUniformLocation(program, "xs");
         glUniform1f(xs, xshift);
-        // ys = glGetUniformLocation(program, "ys");
         glUniform1f(ys, yshift);
-        // zs = glGetUniformLocation(program, "zs");
         glUniform1f(zs, zshift);
-        // cm = glGetUniformLocation(program, "c");
         glUniform1f(cm, dcam);
-
+        glUniform1f(tr, tratio);
 
         glUseProgram(program);
-
-        glBindTexture(GL_TEXTURE_2D, texid);
-
+        glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, bfsize);
 
@@ -715,7 +799,7 @@ int main(int ac, char **av) {
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteTextures(1, &texid);
+    glDeleteTextures(1, &texture);
     glDeleteProgram(program);   
     glfwDestroyWindow(window);
     glfwTerminate();

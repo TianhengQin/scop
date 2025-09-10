@@ -29,7 +29,7 @@ int main() {
     unsigned char * ubf = (unsigned char *)rbf;
 
 
-    for (int i = 138; i<2000; i++) {
+    for (int i = 0; i<200; i++) {
         std::cout << (int)ubf[i] << " ";
     }
     // std::cout << (unsigned int)((unsigned char)rbf[11]) << std::endl;
