@@ -7,7 +7,8 @@
 #include <cmath>
 #include <unistd.h>
 #include <fstream>
-
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb.h"
 
 GLuint program;
 unsigned int VBO, VAO;
@@ -112,6 +113,9 @@ void push3(int a, int b, int c) {
     rendBf.push_back(n.y);
     rendBf.push_back(n.z);
 
+    rendBf.push_back(0.0f);
+    rendBf.push_back(0.0f);
+
     rendBf.push_back(vertices[b].x);
     rendBf.push_back(vertices[b].y);
     rendBf.push_back(vertices[b].z);
@@ -120,6 +124,9 @@ void push3(int a, int b, int c) {
     rendBf.push_back(n.y);
     rendBf.push_back(n.z);
 
+    rendBf.push_back(0.0f);
+    rendBf.push_back(1.0f);
+
     rendBf.push_back(vertices[c].x);
     rendBf.push_back(vertices[c].y);
     rendBf.push_back(vertices[c].z);
@@ -127,6 +134,9 @@ void push3(int a, int b, int c) {
     rendBf.push_back(n.x);
     rendBf.push_back(n.y);
     rendBf.push_back(n.z);
+
+    rendBf.push_back(1.0f);
+    rendBf.push_back(1.0f);
 
 }
 
@@ -315,12 +325,16 @@ void glprintversion() {
     std::cout << "============================================================" << std::endl;
 }
 
-void compileshader() {
+int compileshader() {
+
+    int re = 0;
 
     const char *vertexShader = "#version 410 core\n"
                                "layout (location = 0) in vec3 aPos;\n"
                                "layout (location = 1) in vec3 aNv;\n"
+                               "layout (location = 2) in vec2 aTex;\n"
                                "out vec3 nv;\n"
+                               "out vec2 tc;\n"
                                "uniform float xs;\n"
                                "uniform float ys;\n"
                                "uniform float zs;\n"
@@ -333,17 +347,21 @@ void compileshader() {
                                "   float zzz = (-10.0f-80.1f/99.9f*100.0f)/90.0f * z + 80.1f/99.9f*c;\n"
                                "   gl_Position = vec4(Pos.x + xs, Pos.y + ys, zzz, w);\n"
                                "   nv = aNv;\n"
+                               "   tc = aTex;\n"
                                "}\n";
     std::cout << "Vertex Shader:\n" << vertexShader << std::endl;
 
     const char *fragmentShader =  "#version 410 core\n"
                                   "out vec4 FragColor;\n"
                                   "in vec3 nv;\n"
+                                  "in vec2 tc;\n"
+                                  "uniform sampler2D tex;\n"
                                   "void main() {\n"
                                   "   float br;\n"
                                   "   float z = nv.z;\n"
                                   "   br = (z + 1.0f)/2.0f;\n"
-                                  "   FragColor = vec4(1.0f * br, 1.0f * br, 1.0f * br, 1.0f);\n"
+                                //   "   FragColor = vec4(1.0f * br, 1.0f * br, 1.0f * br, 1.0f);\n"
+                                  "   FragColor = texture(tex, tc);\n"
                                   "}\n";
     std::cout << "Fragment Shader:\n" << fragmentShader << std::endl;
 
@@ -354,7 +372,6 @@ void compileshader() {
     GLuint fShader = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fShader, 1, &fragmentShader, NULL);
     glCompileShader(fShader);
-    std::cout << "Shader compiled" << std::endl;
 
     program = glCreateProgram();
     glAttachShader(program, vShader);
@@ -366,20 +383,27 @@ void compileshader() {
     glGetShaderiv(fShader, GL_COMPILE_STATUS, &success);
     if (!success) {
         glGetShaderInfoLog(fShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+        std::cout << "Vertex shader compilation error: " << infoLog << std::endl;
+        re = 1;
     }
     glGetShaderiv(fShader, GL_COMPILE_STATUS, &success);
     if (!success) {
         glGetShaderInfoLog(fShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+        std::cout << "Fragment shader compilation error: " << infoLog << std::endl;
+        re = 1;
     }
     glGetProgramiv(program, GL_LINK_STATUS, &success);
     if (!success) {
         glGetProgramInfoLog(program, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+        std::cout << "Linking Failed: " << infoLog << std::endl;
+        re = 1;
     }
     glDeleteShader(vShader);
     glDeleteShader(fShader);
+    if (!re) {
+        std::cout << "Shader compiled" << std::endl;
+    }
+    return re;
 }
 
 void setVAO() {
@@ -391,10 +415,12 @@ void setVAO() {
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * rendBf.size(), rendBf.data(), GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0); 
 
@@ -577,7 +603,12 @@ int main(int ac, char **av) {
 
     glprintversion();
 
-    compileshader();
+    if (compileshader()) {
+        glDeleteProgram(program);
+        glfwDestroyWindow(window);
+        glfwTerminate();
+        return 1;
+    }
 
     setVAO();
 
@@ -596,7 +627,53 @@ int main(int ac, char **av) {
     GLuint rm;
     GLuint cm;
 
-    int bfsize = rendBf.size()/6;
+    GLuint texid;
+    GLuint texUni;
+
+    int bfsize = rendBf.size()/8;
+
+    std::cout<<"Loading texture ..."<<std::endl;
+    int w, h, cn;
+    unsigned char* bytes = stbi_load("resources/cat4.bmp", &w, &h, &cn, 0);
+
+    std::cout<<bytes[0]<<std::endl;
+
+	glGenTextures(1, &texid);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texid);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, bytes);
+
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	stbi_image_free(bytes);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+    texUni = glGetUniformLocation(program, "tex");
+    glUseProgram(program);
+    glUniform1i(texUni, 0);
+    std::cout<<"Texture loaded"<<std::endl;
+
+
+    rm = glGetUniformLocation(program, "rm");
+    // glUniformMatrix3fv(rm, 1, GL_FALSE, &rotm.m[0][0]);
+    xs = glGetUniformLocation(program, "xs");
+    // glUniform1f(xs, xshift);
+    ys = glGetUniformLocation(program, "ys");
+    // glUniform1f(ys, yshift);
+    zs = glGetUniformLocation(program, "zs");
+    // glUniform1f(zs, zshift);
+    cm = glGetUniformLocation(program, "c");
+    // glUniform1f(cm, dcam);
+
 
     while (!glfwWindowShouldClose(window)) {
 
@@ -610,33 +687,36 @@ int main(int ac, char **av) {
 
         // rot = glGetUniformLocation(program, "theta");
         // glUniform1f(rot, theta);
-        rm = glGetUniformLocation(program, "rm");
+
+        // rm = glGetUniformLocation(program, "rm");
         glUniformMatrix3fv(rm, 1, GL_FALSE, &rotm.m[0][0]);
-        xs = glGetUniformLocation(program, "xs");
+        // xs = glGetUniformLocation(program, "xs");
         glUniform1f(xs, xshift);
-        ys = glGetUniformLocation(program, "ys");
+        // ys = glGetUniformLocation(program, "ys");
         glUniform1f(ys, yshift);
-        zs = glGetUniformLocation(program, "zs");
+        // zs = glGetUniformLocation(program, "zs");
         glUniform1f(zs, zshift);
-        cm = glGetUniformLocation(program, "c");
+        // cm = glGetUniformLocation(program, "c");
         glUniform1f(cm, dcam);
 
 
         glUseProgram(program);
+
+        glBindTexture(GL_TEXTURE_2D, texid);
+
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, bfsize);
 
         glfwSwapBuffers(window);
 
         glfwPollEvents();
-        // zshift+=0.02;
-        // dcam*=0.999f;
 
     }
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteProgram(program);
+    glDeleteTextures(1, &texid);
+    glDeleteProgram(program);   
     glfwDestroyWindow(window);
     glfwTerminate();
 
