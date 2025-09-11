@@ -49,4 +49,14 @@ m3 roty(float t);
 m3 rotz(float t);
 m3 productm3(m3 a, m3 b);
 
+int loadtexture(char *file);
+void init_rot();
+void init_pos();
+void Events(GLFWwindow *window);
+
+void glchangeversion();
+void glprintversion();
+int compileshader();
+void setVAO();
+
 #endif

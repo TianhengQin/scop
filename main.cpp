@@ -212,349 +212,349 @@ int loadfile(char *file) {
     return (0);
 }
 
-void glchangeversion() {
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-}
+// void glchangeversion() {
+//     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+//     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+//     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+//     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+// }
 
-void glprintversion() {
-    std::cout << "============================================================" << std::endl;
-    std::cout << "Renderer:       " << glGetString(GL_RENDERER) << std::endl;
-    std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
-    std::cout << "GLSL version:   " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
-    std::cout << "============================================================" << std::endl;
-}
+// void glprintversion() {
+//     std::cout << "============================================================" << std::endl;
+//     std::cout << "Renderer:       " << glGetString(GL_RENDERER) << std::endl;
+//     std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl;
+//     std::cout << "GLSL version:   " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+//     std::cout << "============================================================" << std::endl;
+// }
 
-int compileshader() {
+// int compileshader() {
 
-    int re = 0;
+//     int re = 0;
 
-    const char *vertexShader = "#version 410 core\n"
-                               "layout (location = 0) in vec3 aPos;\n"
-                               "layout (location = 1) in vec3 aNv;\n"
-                               "layout (location = 2) in vec2 aTex;\n"
-                               "out vec3 nv;\n"
-                               "out vec2 tc;\n"
-                               "uniform float xs;\n"
-                               "uniform float ys;\n"
-                               "uniform float zs;\n"
-                               "uniform float c;\n"
-                               "uniform mat3 rm;\n"
-                               "void main() {\n"
-                               "   vec3 Pos = aPos * rm;\n"
-                               "   float z = Pos.z + zs;\n"
-                               "   float w = (c - z);\n"
-                               "   float zzz = (-10.0f-80.1f/99.9f*100.0f)/90.0f * z + 80.1f/99.9f*c;\n"
-                               "   gl_Position = vec4(Pos.x + xs, Pos.y + ys, zzz, w);\n"
-                               "   nv = aNv;\n"
-                               "   tc = aTex;\n"
-                               "}\n";
+//     const char *vertexShader = "#version 410 core\n"
+//                                "layout (location = 0) in vec3 aPos;\n"
+//                                "layout (location = 1) in vec3 aNv;\n"
+//                                "layout (location = 2) in vec2 aTex;\n"
+//                                "out vec3 nv;\n"
+//                                "out vec2 tc;\n"
+//                                "uniform float xs;\n"
+//                                "uniform float ys;\n"
+//                                "uniform float zs;\n"
+//                                "uniform float c;\n"
+//                                "uniform mat3 rm;\n"
+//                                "void main() {\n"
+//                                "   vec3 Pos = aPos * rm;\n"
+//                                "   float z = Pos.z + zs;\n"
+//                                "   float w = (c - z);\n"
+//                                "   float zzz = (-10.0f-80.1f/99.9f*100.0f)/90.0f * z + 80.1f/99.9f*c;\n"
+//                                "   gl_Position = vec4(Pos.x + xs, Pos.y + ys, zzz, w);\n"
+//                                "   nv = aNv;\n"
+//                                "   tc = aTex;\n"
+//                                "}\n";
 
-    const char *fragmentShader =  "#version 410 core\n"
-                                  "out vec4 FragColor;\n"
-                                  "in vec3 nv;\n"
-                                  "in vec2 tc;\n"
-                                  "uniform sampler2D tex;\n"
-                                  "uniform float tr;\n"
-                                  "void main() {\n"
-                                  "   float br;\n"
-                                  "   vec4 cl;\n"
-                                  "   float z = nv.z;\n"
-                                  "   br = (z + 1.5f)/2.5f;\n"
-                                  "   cl = vec4(1.0f * br, 1.0f * br, 1.0f * br, 1.0f);\n"
-                                  "   FragColor = (1.0f - tr) * cl + tr * texture(tex, tc);\n"
-                                  "}\n";
+//     const char *fragmentShader =  "#version 410 core\n"
+//                                   "out vec4 FragColor;\n"
+//                                   "in vec3 nv;\n"
+//                                   "in vec2 tc;\n"
+//                                   "uniform sampler2D tex;\n"
+//                                   "uniform float tr;\n"
+//                                   "void main() {\n"
+//                                   "   float br;\n"
+//                                   "   vec4 cl;\n"
+//                                   "   float z = nv.z;\n"
+//                                   "   br = (z + 1.5f)/2.5f;\n"
+//                                   "   cl = vec4(1.0f * br, 1.0f * br, 1.0f * br, 1.0f);\n"
+//                                   "   FragColor = (1.0f - tr) * cl + tr * texture(tex, tc);\n"
+//                                   "}\n";
 
-    GLuint vShader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vShader, 1, &vertexShader, NULL);
-    glCompileShader(vShader);
+//     GLuint vShader = glCreateShader(GL_VERTEX_SHADER);
+//     glShaderSource(vShader, 1, &vertexShader, NULL);
+//     glCompileShader(vShader);
 
-    GLuint fShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fShader, 1, &fragmentShader, NULL);
-    glCompileShader(fShader);
+//     GLuint fShader = glCreateShader(GL_FRAGMENT_SHADER);
+//     glShaderSource(fShader, 1, &fragmentShader, NULL);
+//     glCompileShader(fShader);
 
-    program = glCreateProgram();
-    glAttachShader(program, vShader);
-    glAttachShader(program, fShader);
-    glLinkProgram(program);
+//     program = glCreateProgram();
+//     glAttachShader(program, vShader);
+//     glAttachShader(program, fShader);
+//     glLinkProgram(program);
 
-    int success;
-    char infoLog[512];
-    glGetShaderiv(fShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(fShader, 512, NULL, infoLog);
-        std::cout << "Vertex shader compilation error: " << infoLog << std::endl;
-        re = 1;
-    }
-    glGetShaderiv(fShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(fShader, 512, NULL, infoLog);
-        std::cout << "Fragment shader compilation error: " << infoLog << std::endl;
-        re = 1;
-    }
-    glGetProgramiv(program, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(program, 512, NULL, infoLog);
-        std::cout << "Linking Failed: " << infoLog << std::endl;
-        re = 1;
-    }
-    glDeleteShader(vShader);
-    glDeleteShader(fShader);
-    if (!re) {
-        std::cout << "Shader compiled" << std::endl;
-    }
-    return re;
-}
+//     int success;
+//     char infoLog[512];
+//     glGetShaderiv(fShader, GL_COMPILE_STATUS, &success);
+//     if (!success) {
+//         glGetShaderInfoLog(fShader, 512, NULL, infoLog);
+//         std::cout << "Vertex shader compilation error: " << infoLog << std::endl;
+//         re = 1;
+//     }
+//     glGetShaderiv(fShader, GL_COMPILE_STATUS, &success);
+//     if (!success) {
+//         glGetShaderInfoLog(fShader, 512, NULL, infoLog);
+//         std::cout << "Fragment shader compilation error: " << infoLog << std::endl;
+//         re = 1;
+//     }
+//     glGetProgramiv(program, GL_LINK_STATUS, &success);
+//     if (!success) {
+//         glGetProgramInfoLog(program, 512, NULL, infoLog);
+//         std::cout << "Linking Failed: " << infoLog << std::endl;
+//         re = 1;
+//     }
+//     glDeleteShader(vShader);
+//     glDeleteShader(fShader);
+//     if (!re) {
+//         std::cout << "Shader compiled" << std::endl;
+//     }
+//     return re;
+// }
 
-void setVAO() {
+// void setVAO() {
 
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(VAO);
+//     glGenVertexArrays(1, &VAO);
+//     glGenBuffers(1, &VBO);
+//     glBindVertexArray(VAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * rendBf.size(), rendBf.data(), GL_STATIC_DRAW);
+//     glBindBuffer(GL_ARRAY_BUFFER, VBO);
+//     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * rendBf.size(), rendBf.data(), GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+//     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+//     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+//     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
 
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glEnableVertexAttribArray(2);
+//     glEnableVertexAttribArray(0);
+//     glEnableVertexAttribArray(1);
+//     glEnableVertexAttribArray(2);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0); 
+//     glBindBuffer(GL_ARRAY_BUFFER, 0); 
 
-    glBindVertexArray(0); 
+//     glBindVertexArray(0); 
 
-    glEnable(GL_DEPTH_TEST);
-}
+//     glEnable(GL_DEPTH_TEST);
+// }
 
-void init_rot() {
-    rotm.m[0][0] = 1.0f;
-    rotm.m[1][1] = 1.0f;
-    rotm.m[2][2] = 1.0f;
-    rotm.m[0][1] = 0.0f;
-    rotm.m[0][2] = 0.0f;
-    rotm.m[1][0] = 0.0f;
-    rotm.m[1][2] = 0.0f;
-    rotm.m[2][0] = 0.0f;
-    rotm.m[2][1] = 0.0f;
-}
+// void init_rot() {
+//     rotm.m[0][0] = 1.0f;
+//     rotm.m[1][1] = 1.0f;
+//     rotm.m[2][2] = 1.0f;
+//     rotm.m[0][1] = 0.0f;
+//     rotm.m[0][2] = 0.0f;
+//     rotm.m[1][0] = 0.0f;
+//     rotm.m[1][2] = 0.0f;
+//     rotm.m[2][0] = 0.0f;
+//     rotm.m[2][1] = 0.0f;
+// }
 
-void init_pos() {
-    xshift = 0.0f;
-    yshift = 0.0f;
-    zshift = 0.0f;
-}
+// void init_pos() {
+//     xshift = 0.0f;
+//     yshift = 0.0f;
+//     zshift = 0.0f;
+// }
 
-void Events(GLFWwindow *window) {
+// void Events(GLFWwindow *window) {
 
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-        key_esc = true;
-    } else if (key_esc) {
-        std::cout<<"Exit"<<std::endl;
-		glfwSetWindowShouldClose(window, true);
-    }
-    if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
-        key_r = true;
-    } else if (key_r) {
-		init_pos();
-        init_rot();
-        dcam = dcamo;
-        key_r = false;
-    }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        yshift -= dshift;
-    } else if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        yshift += dshift;
-    }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        xshift -= dshift;
-    } else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        xshift += dshift;
-    }
-    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        zshift -= dshift;
-    } else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-        zshift += dshift;
-    }
-    if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS) {
-        rotm = productm3(rotm, roty(0.01));
-    } else if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS) {
-        rotm = productm3(rotm, roty(-0.01));
-    }
-    if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) {
-        rotm = productm3(rotm, rotx(0.01));
-    } else if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) {
-        rotm = productm3(rotm, rotx(-0.01));
-    }
-    if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) {
-        rotm = productm3(rotm, rotz(0.01));
-    } else if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) {
-        rotm = productm3(rotm, rotz(-0.01));
-    }
-    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
-        dcam *= 0.995f;
-    } else if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-        dcam *= 1.005025126f;
-    }
-    if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS) {
-        if (tratio == 0.0f) {
-            tratio = 0.01f;
-        } else {
-            tratio *= 1.05263158f;
-            if (tratio > 1.0f) {
-                tratio = 1.0f;
-            }
-        }
-    } else if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
-        if (tratio < 0.01f) {
-            tratio = 0.0f;
-        } else {
-            tratio *= 0.95f;
-        }
-    }
-}
+//     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+//         key_esc = true;
+//     } else if (key_esc) {
+//         std::cout<<"Exit"<<std::endl;
+// 		glfwSetWindowShouldClose(window, true);
+//     }
+//     if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) {
+//         key_r = true;
+//     } else if (key_r) {
+// 		init_pos();
+//         init_rot();
+//         dcam = dcamo;
+//         key_r = false;
+//     }
+//     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+//         yshift -= dshift;
+//     } else if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+//         yshift += dshift;
+//     }
+//     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+//         xshift -= dshift;
+//     } else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+//         xshift += dshift;
+//     }
+//     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+//         zshift -= dshift;
+//     } else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+//         zshift += dshift;
+//     }
+//     if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS) {
+//         rotm = productm3(rotm, roty(0.01));
+//     } else if (glfwGetKey(window, GLFW_KEY_H) == GLFW_PRESS) {
+//         rotm = productm3(rotm, roty(-0.01));
+//     }
+//     if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS) {
+//         rotm = productm3(rotm, rotx(0.01));
+//     } else if (glfwGetKey(window, GLFW_KEY_J) == GLFW_PRESS) {
+//         rotm = productm3(rotm, rotx(-0.01));
+//     }
+//     if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS) {
+//         rotm = productm3(rotm, rotz(0.01));
+//     } else if (glfwGetKey(window, GLFW_KEY_K) == GLFW_PRESS) {
+//         rotm = productm3(rotm, rotz(-0.01));
+//     }
+//     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+//         dcam *= 0.995f;
+//     } else if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+//         dcam *= 1.005025126f;
+//     }
+//     if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS) {
+//         if (tratio == 0.0f) {
+//             tratio = 0.01f;
+//         } else {
+//             tratio *= 1.05263158f;
+//             if (tratio > 1.0f) {
+//                 tratio = 1.0f;
+//             }
+//         }
+//     } else if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS) {
+//         if (tratio < 0.01f) {
+//             tratio = 0.0f;
+//         } else {
+//             tratio *= 0.95f;
+//         }
+//     }
+// }
 
-int loadtexture(char *file) {
+// int loadtexture(char *file) {
 
-    GLuint texid;
-    GLuint texUni;
-    std::vector<unsigned char> byte;
-    std::ifstream tex;
+//     GLuint texid;
+//     GLuint texUni;
+//     std::vector<unsigned char> byte;
+//     std::ifstream tex;
 
-    std::cout << "Loading texture : " <<file<< std::endl;
+//     std::cout << "Loading texture : " <<file<< std::endl;
 
-    tex.open(file);
-    if (!tex.is_open()) {
-        std::cout<<"Failed" <<std::endl;
-        return 1;
-    }
+//     tex.open(file);
+//     if (!tex.is_open()) {
+//         std::cout<<"Failed" <<std::endl;
+//         return 1;
+//     }
 
-    char bf = 0;
-    int base;
-    tex.get(bf);
-    if (bf != 'B') {
-        std::cout << "BMP format error" << std::endl;
-        return 1;
-    }
-    tex.get(bf);
-    if (bf != 'M') {
-        std::cout << "BMP format error" << std::endl;
-        return 1;
-    }
+//     char bf = 0;
+//     int base;
+//     tex.get(bf);
+//     if (bf != 'B') {
+//         std::cout << "BMP format error" << std::endl;
+//         return 1;
+//     }
+//     tex.get(bf);
+//     if (bf != 'M') {
+//         std::cout << "BMP format error" << std::endl;
+//         return 1;
+//     }
 
-    for (int i=0;i<8;i++) {
-        if (!tex.get(bf)) {
-            tex.close();
-            std::cout << "BMP format error" << std::endl;
-            return 1;
-        }
-    }
+//     for (int i=0;i<8;i++) {
+//         if (!tex.get(bf)) {
+//             tex.close();
+//             std::cout << "BMP format error" << std::endl;
+//             return 1;
+//         }
+//     }
 
-    int offset = 0;
-    base = 1;
-    for (int i=0;i<4;i++) {
-        if (!tex.get(bf)) {
-            tex.close();
-            std::cout << "BMP format error" << std::endl;
-            return 1;
-        }
-        offset += (int)*(unsigned char *)&bf * base;
-        base *= 256;
-    }
+//     int offset = 0;
+//     base = 1;
+//     for (int i=0;i<4;i++) {
+//         if (!tex.get(bf)) {
+//             tex.close();
+//             std::cout << "BMP format error" << std::endl;
+//             return 1;
+//         }
+//         offset += (int)*(unsigned char *)&bf * base;
+//         base *= 256;
+//     }
 
-    for (int i=0;i<4;i++) {
-        if (!tex.get(bf)) {
-            tex.close();
-            std::cout << "BMP format error" << std::endl;
-            return 1;
-        }
-    }
+//     for (int i=0;i<4;i++) {
+//         if (!tex.get(bf)) {
+//             tex.close();
+//             std::cout << "BMP format error" << std::endl;
+//             return 1;
+//         }
+//     }
 
-    int width = 0;
-    base = 1;
-    for (int i=0;i<4;i++) {
-        if (!tex.get(bf)) {
-            tex.close();
-            std::cout << "BMP format error" << std::endl;
-            return 1;
-        }
-        width += (int)*(unsigned char *)&bf * base;
-        base *= 256;
-    }
+//     int width = 0;
+//     base = 1;
+//     for (int i=0;i<4;i++) {
+//         if (!tex.get(bf)) {
+//             tex.close();
+//             std::cout << "BMP format error" << std::endl;
+//             return 1;
+//         }
+//         width += (int)*(unsigned char *)&bf * base;
+//         base *= 256;
+//     }
 
-    int height = 0;
-    base = 1;
-    for (int i=0;i<4;i++) {
-        if (!tex.get(bf)) {
-            tex.close();
-            std::cout << "BMP format error" << std::endl;
-            return 1;
-        }
-        height += (int)*(unsigned char *)&bf * base;
-        base *= 256;
-    }
+//     int height = 0;
+//     base = 1;
+//     for (int i=0;i<4;i++) {
+//         if (!tex.get(bf)) {
+//             tex.close();
+//             std::cout << "BMP format error" << std::endl;
+//             return 1;
+//         }
+//         height += (int)*(unsigned char *)&bf * base;
+//         base *= 256;
+//     }
 
-    offset -= 26;
-    for (int i=0;i<offset;i++) {
-        if (!tex.get(bf)) {
-            tex.close();
-            std::cout << "BMP format error" << std::endl;
-            return 1;
-        }
-    }
+//     offset -= 26;
+//     for (int i=0;i<offset;i++) {
+//         if (!tex.get(bf)) {
+//             tex.close();
+//             std::cout << "BMP format error" << std::endl;
+//             return 1;
+//         }
+//     }
 
-    byte.clear();
-    while (tex.get(bf)) {
-        byte.push_back(*(unsigned char *)&bf);
-    }
-    tex.close();
+//     byte.clear();
+//     while (tex.get(bf)) {
+//         byte.push_back(*(unsigned char *)&bf);
+//     }
+//     tex.close();
 
-    int pad = (4 - width * 3 % 4) % 4 + width * 3;
-    if ((unsigned long)(pad * height) != byte.size()) {
-        std::cout << "BMP size error" << std::endl;
-        return 1;
-    }
-    unsigned char sw;
-    int beg;
-    for (int j=0;j<height;j++) {
-        for (int i=0;i<width;i++) {
-            beg = pad * j + i * 3;
-            sw = byte[beg];
-            byte[beg] = byte[beg + 2];
-            byte[beg + 2] = sw;
-        }
-    }
+//     int pad = (4 - width * 3 % 4) % 4 + width * 3;
+//     if ((unsigned long)(pad * height) != byte.size()) {
+//         std::cout << "BMP size error" << std::endl;
+//         return 1;
+//     }
+//     unsigned char sw;
+//     int beg;
+//     for (int j=0;j<height;j++) {
+//         for (int i=0;i<width;i++) {
+//             beg = pad * j + i * 3;
+//             sw = byte[beg];
+//             byte[beg] = byte[beg + 2];
+//             byte[beg + 2] = sw;
+//         }
+//     }
 
-    glGenTextures(1, &texid);
+//     glGenTextures(1, &texid);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texid);
+//     glActiveTexture(GL_TEXTURE0);
+//     glBindTexture(GL_TEXTURE_2D, texid);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, byte.data());
+//     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, byte.data());
 
-    glGenerateMipmap(GL_TEXTURE_2D);
+//     glGenerateMipmap(GL_TEXTURE_2D);
 
-    glBindTexture(GL_TEXTURE_2D, 0);
+//     glBindTexture(GL_TEXTURE_2D, 0);
 
-    texUni = glGetUniformLocation(program, "tex");
-    glUseProgram(program);
-    glUniform1i(texUni, 0);
-    std::cout<<"Texture loaded"<<std::endl;
-    texture = texid;
+//     texUni = glGetUniformLocation(program, "tex");
+//     glUseProgram(program);
+//     glUniform1i(texUni, 0);
+//     std::cout<<"Texture loaded"<<std::endl;
+//     texture = texid;
 
-    return 0;
-}
+//     return 0;
+// }
 
 int main(int ac, char **av) {
 
