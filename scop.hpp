@@ -59,4 +59,6 @@ void glprintversion();
 int compileshader();
 void setVAO();
 
+int loadfile(char *file);
+
 #endif

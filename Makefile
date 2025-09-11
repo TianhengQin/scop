@@ -5,7 +5,7 @@ CXXFLAGS= -std=c++98
 CXXFLAGS+= -Wall -Wextra -Werror
 OPENGL	= -L./opengl/library opengl/library/libglfw.3.dylib -framework Cocoa -framework OpenGL -framework IOKit -framework CoreVideo
 INCLUDE	= -I./ -I./opengl/include
-SRCS	= main.cpp math.cpp operation.cpp texture.cpp gl.cpp opengl/src/glad.cpp
+SRCS	= main.cpp math.cpp operation.cpp texture.cpp gl.cpp obj.cpp opengl/src/glad.cpp
 OBJS	= $(SRCS:.cpp=.o)
 
 all: $(NAME)
