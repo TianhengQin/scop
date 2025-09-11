@@ -7,8 +7,6 @@
 #include <cmath>
 #include <unistd.h>
 #include <fstream>
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb.h"
 
 GLuint texture;
 GLuint program;
@@ -28,10 +26,12 @@ typedef struct mat3 {
 std::vector<v3> vertices;
 std::vector<float> rendBf;
 float dcam;
+float dcamo;
 float theta;
 float xshift;
 float yshift;
 float zshift;
+float dshift;
 float tratio;
 m3 rotm;
 bool key_esc;
@@ -164,6 +164,7 @@ int loadfile(char *file) {
     xshift = 0;
     yshift = 0;
     zshift = 0;
+    dcamo = 0;
     while (std::getline(obj, line)) {
         if (line[0] == 'v' && line[1] == ' ') {
             re = std::sscanf(line.c_str(), "v %f %f %f %f", &vec.x, &vec.y, &vec.z, &w);
@@ -191,11 +192,23 @@ int loadfile(char *file) {
     yshift /= (float)vertices.size();
     zshift /= (float)vertices.size();
 
+    dcamo = 0.0f;
     for (std::vector<v3>::iterator it = vertices.begin(); it != vertices.end(); it++) {
         it->x -= xshift;
         it->y -= yshift;
         it->z -= zshift;
+        if (abs(it->x) > dcamo) {
+            dcamo = abs(it->x);
+        }
+        if (abs(it->y) > dcamo) {
+            dcamo = abs(it->y);
+        }
+        if (abs(it->z) > dcamo) {
+            dcamo = abs(it->z);
+        }
     }
+    dcamo *= 2.0f;
+    dshift = dcamo / 200.0f;
 
     int a[15];
     obj.open(file);
@@ -310,7 +323,7 @@ int compileshader() {
                                "   nv = aNv;\n"
                                "   tc = aTex;\n"
                                "}\n";
-    std::cout << "Vertex Shader:\n" << vertexShader << std::endl;
+    // std::cout << "Vertex Shader:\n" << vertexShader << std::endl;
 
     const char *fragmentShader =  "#version 410 core\n"
                                   "out vec4 FragColor;\n"
@@ -322,11 +335,11 @@ int compileshader() {
                                   "   float br;\n"
                                   "   vec4 cl;\n"
                                   "   float z = nv.z;\n"
-                                  "   br = (z + 1.0f)/2.0f;\n"
+                                  "   br = (z + 1.5f)/2.5f;\n"
                                   "   cl = vec4(1.0f * br, 1.0f * br, 1.0f * br, 1.0f);\n"
                                   "   FragColor = (1.0f - tr) * cl + tr * texture(tex, tc);\n"
                                   "}\n";
-    std::cout << "Fragment Shader:\n" << fragmentShader << std::endl;
+    // std::cout << "Fragment Shader:\n" << fragmentShader << std::endl;
 
     GLuint vShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vShader, 1, &vertexShader, NULL);
@@ -490,23 +503,23 @@ void Events(GLFWwindow *window) {
     } else if (key_r) {
 		init_pos();
         init_rot();
-        dcam = 8.0f;
+        dcam = dcamo;
         key_r = false;
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        yshift -= 0.05;
+        yshift -= dshift;
     } else if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        yshift += 0.05;
+        yshift += dshift;
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        xshift -= 0.05;
+        xshift -= dshift;
     } else if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        xshift += 0.05;
+        xshift += dshift;
     }
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        zshift -= 0.05;
+        zshift -= dshift;
     } else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-        zshift += 0.05;
+        zshift += dshift;
     }
     if (glfwGetKey(window, GLFW_KEY_Y) == GLFW_PRESS) {
         rotm = productm3(rotm, roty(0.01));
@@ -524,9 +537,9 @@ void Events(GLFWwindow *window) {
         rotm = productm3(rotm, rotz(-0.01));
     }
     if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
-        dcam *= 0.99f;
+        dcam *= 0.995f;
     } else if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-        dcam *= 1.010101f;
+        dcam *= 1.005025126f;
     }
     if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS) {
         if (tratio == 0.0f) {
@@ -554,9 +567,6 @@ int loadtexture(char *file) {
     std::ifstream tex;
 
     std::cout << "Loading texture : " <<file<< std::endl;
-    int w, h, cn;
-
-    unsigned char* bytes = stbi_load(file, &w, &h, &cn, 0);
 
     tex.open(file);
     if (!tex.is_open()) {
@@ -564,7 +574,7 @@ int loadtexture(char *file) {
         return 1;
     }
 
-    char bf;
+    char bf = 0;
     int base;
     tex.get(bf);
     if (bf != 'B') {
@@ -578,44 +588,66 @@ int loadtexture(char *file) {
     }
 
     for (int i=0;i<8;i++) {
-        tex.get(bf);
+        if (!tex.get(bf)) {
+            tex.close();
+            std::cout << "BMP format error" << std::endl;
+            return 1;
+        }
     }
 
     int offset = 0;
     base = 1;
     for (int i=0;i<4;i++) {
-        tex.get(bf);
+        if (!tex.get(bf)) {
+            tex.close();
+            std::cout << "BMP format error" << std::endl;
+            return 1;
+        }
         offset += (int)*(unsigned char *)&bf * base;
         base *= 256;
-        std::cout << offset << std::endl;
     }
 
     for (int i=0;i<4;i++) {
-        tex.get(bf);
+        if (!tex.get(bf)) {
+            tex.close();
+            std::cout << "BMP format error" << std::endl;
+            return 1;
+        }
     }
 
     int width = 0;
     base = 1;
     for (int i=0;i<4;i++) {
-        tex.get(bf);
+        if (!tex.get(bf)) {
+            tex.close();
+            std::cout << "BMP format error" << std::endl;
+            return 1;
+        }
         width += (int)*(unsigned char *)&bf * base;
         base *= 256;
-        std::cout << width << std::endl;
     }
 
     int height = 0;
     base = 1;
     for (int i=0;i<4;i++) {
-        tex.get(bf);
+        if (!tex.get(bf)) {
+            tex.close();
+            std::cout << "BMP format error" << std::endl;
+            return 1;
+        }
         height += (int)*(unsigned char *)&bf * base;
         base *= 256;
-        std::cout << height << std::endl;
+        // std::cout << height << std::endl;
     }
 
     offset -= 26;
     for (int i=0;i<offset;i++) {
-        tex.get(bf);
-        std::cout << (int)*(unsigned char *)&bf << std::endl;
+        if (!tex.get(bf)) {
+            tex.close();
+            std::cout << "BMP format error" << std::endl;
+            return 1;
+        }
+        // std::cout << (int)*(unsigned char *)&bf << std::endl;
     }
 
     // int pad = (4 - width * 3 % 4) % 4;
@@ -639,15 +671,19 @@ int loadtexture(char *file) {
     //     std::cout << std::endl;
 
     // }
-
+    byte.clear();
     while (tex.get(bf)) {
         byte.push_back(*(unsigned char *)&bf);
     }
-    std::cout << byte.size() << std::endl;
-    std::cout << w << h << std::endl;
-    std::cout << width << height << std::endl;
+    tex.close();
+    // std::cout << byte.size() << std::endl;
+    // std::cout << width << height << std::endl;
 
     int pad = (4 - width * 3 % 4) % 4 + width * 3;
+    if ((unsigned long)(pad * height) != byte.size()) {
+        std::cout << "BMP size error" << std::endl;
+        return 1;
+    }
     unsigned char sw;
     int beg;
     for (int j=0;j<height;j++) {
@@ -677,11 +713,9 @@ int loadtexture(char *file) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, byte.data());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, byte.data());
 
     glGenerateMipmap(GL_TEXTURE_2D);
-
-    stbi_image_free(bytes);
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -704,8 +738,10 @@ int main(int ac, char **av) {
     if (loadfile(av[1]))
         return 1;
 
-    if (!glfwInit())
+    if (!glfwInit()) {
+        std::cout << "GLFW failed" << std::endl;
         return 1;
+    }
 
     glchangeversion();
 
@@ -738,7 +774,8 @@ int main(int ac, char **av) {
     setVAO();
 
     theta = 0.0f;
-    dcam = 8.0f;
+    dcam = dcamo;
+    std::cout << dcamo << std::endl;
     key_esc = false;
     key_r = false;
     tratio = 0.0f;
