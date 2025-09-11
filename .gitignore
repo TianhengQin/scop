@@ -3,3 +3,4 @@ scop
 a.out
 .vscode
 test_*
+*.o

@@ -1,76 +1,4 @@
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <iostream>
-#include <string>
-#include <vector>
-#include <map>
-#include <cmath>
-#include <unistd.h>
-#include <fstream>
-
-GLuint texture;
-GLuint program;
-unsigned int VBO, VAO;
-
-
-typedef struct vec3 {
-    float x;
-    float y;
-    float z;
-} v3;
-
-typedef struct mat3 {
-    float m[3][3];
-} m3;
-
-std::vector<v3> vertices;
-std::vector<float> rendBf;
-float dcam;
-float dcamo;
-float theta;
-float xshift;
-float yshift;
-float zshift;
-float dshift;
-float tratio;
-m3 rotm;
-bool key_esc;
-bool key_r;
-
-v3 minus(v3 a, v3 b) {
-
-    v3 re;
-
-    re.x = a.x - b.x;
-    re.y = a.y - b.y;
-    re.z = a.z - b.z;
-    return re;
-}
-
-float dot(v3 a, v3 b) {
-    return (a.x * b.x + a.y * b.y + a.z * b.z);
-}
-
-v3 cross(v3 a, v3 b) {
-    v3 re;
-    re.x = a.y * b.z - a.z * b.y;
-    re.y = a.z * b.x - a.x * b.z;
-    re.z = a.x * b.y - a.y * b.x;
-    return re;
-}
-
-v3 normized(v3 a) {
-    float	mod;
-    mod = sqrtf(a.x * a.x + a.y * a.y + a.z * a.z);
-	a.x = a.x / mod;
-	a.y = a.y / mod;
-	a.z = a.z / mod;
-	return (a);
-}
-
-v3 nv(v3 a, v3 b, v3 c) {
-    return normized(cross(minus(b,a),minus(c,a)));
-}
+#include "main.hpp"
 
 void push3(int a, int b, int c, bool up) {
 
@@ -323,7 +251,6 @@ int compileshader() {
                                "   nv = aNv;\n"
                                "   tc = aTex;\n"
                                "}\n";
-    // std::cout << "Vertex Shader:\n" << vertexShader << std::endl;
 
     const char *fragmentShader =  "#version 410 core\n"
                                   "out vec4 FragColor;\n"
@@ -339,7 +266,6 @@ int compileshader() {
                                   "   cl = vec4(1.0f * br, 1.0f * br, 1.0f * br, 1.0f);\n"
                                   "   FragColor = (1.0f - tr) * cl + tr * texture(tex, tc);\n"
                                   "}\n";
-    // std::cout << "Fragment Shader:\n" << fragmentShader << std::endl;
 
     GLuint vShader = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vShader, 1, &vertexShader, NULL);
@@ -394,6 +320,7 @@ void setVAO() {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
@@ -423,75 +350,8 @@ void init_pos() {
     zshift = 0.0f;
 }
 
-m3 rotx(float t) {
-
-    m3 re;
-
-    re.m[0][0] = 1.0f;
-    re.m[1][1] = cosf(t);
-    re.m[2][2] = re.m[0][0];
-    re.m[0][1] = 0.0f;
-    re.m[0][2] = 0.0f;
-    re.m[1][0] = 0.0f;
-    re.m[1][2] = -sinf(t);
-    re.m[2][0] = 0.0f;
-    re.m[2][1] = -re.m[1][2];
-
-    return re;
-}
-
-m3 roty(float t) {
-
-    m3 re;
-
-    re.m[0][0] = cosf(t);
-    re.m[1][1] = 1.0f;
-    re.m[2][2] = re.m[0][0];
-    re.m[0][1] = 0.0f;
-    re.m[0][2] = sinf(t);
-    re.m[1][0] = 0.0f;
-    re.m[1][2] = 0.0f;
-    re.m[2][0] = -re.m[0][2];
-    re.m[2][1] = 0.0f;
-
-    return re;
-}
-
-m3 rotz(float t) {
-
-    m3 re;
-
-    re.m[0][0] = cosf(t);
-    re.m[1][1] = re.m[0][0];
-    re.m[2][2] = 1.0f;
-    re.m[0][1] = -sinf(t);
-    re.m[0][2] = 0.0f;
-    re.m[1][0] = -re.m[0][1];
-    re.m[1][2] = 0.0f;
-    re.m[2][0] = 0.0f;
-    re.m[2][1] = 0.0f;
-
-    return re;
-}
-
-m3 productm3(m3 a, m3 b) {
-    m3 re;
-
-    re.m[0][0] = a.m[0][0] * b.m[0][0] + a.m[0][1] * b.m[1][0] + a.m[0][2] * b.m[2][0];
-    re.m[1][1] = a.m[1][0] * b.m[0][1] + a.m[1][1] * b.m[1][1] + a.m[1][2] * b.m[2][1];
-    re.m[2][2] = a.m[2][0] * b.m[0][2] + a.m[2][1] * b.m[1][2] + a.m[2][2] * b.m[2][2];
-    re.m[0][1] = a.m[0][0] * b.m[0][1] + a.m[0][1] * b.m[1][1] + a.m[0][2] * b.m[2][1];
-    re.m[0][2] = a.m[0][0] * b.m[0][2] + a.m[0][1] * b.m[1][2] + a.m[0][2] * b.m[2][2];
-    re.m[1][0] = a.m[1][0] * b.m[0][0] + a.m[1][1] * b.m[1][0] + a.m[1][2] * b.m[2][0];
-    re.m[1][2] = a.m[1][0] * b.m[0][2] + a.m[1][1] * b.m[1][2] + a.m[1][2] * b.m[2][2];
-    re.m[2][0] = a.m[2][0] * b.m[0][0] + a.m[2][1] * b.m[1][0] + a.m[2][2] * b.m[2][0];
-    re.m[2][1] = a.m[2][0] * b.m[0][1] + a.m[2][1] * b.m[1][1] + a.m[2][2] * b.m[2][1];
-
-    return re;
-}
-
-
 void Events(GLFWwindow *window) {
+
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         key_esc = true;
     } else if (key_esc) {
@@ -637,7 +497,6 @@ int loadtexture(char *file) {
         }
         height += (int)*(unsigned char *)&bf * base;
         base *= 256;
-        // std::cout << height << std::endl;
     }
 
     offset -= 26;
@@ -647,37 +506,13 @@ int loadtexture(char *file) {
             std::cout << "BMP format error" << std::endl;
             return 1;
         }
-        // std::cout << (int)*(unsigned char *)&bf << std::endl;
     }
 
-    // int pad = (4 - width * 3 % 4) % 4;
-    // for (int j=0;j<height;j++) {
-    //     for (int i=0;i<width;i++) {
-    //         tex.get(bf);
-    //         byte.push_back(*(unsigned char *)&bf);
-    //         std::cout << (int)*(unsigned char *)&bf << " ";
-    //         tex.get(bf);
-    //         byte.push_back(*(unsigned char *)&bf);
-    //         std::cout << (int)*(unsigned char *)&bf<< " ";
-    //         tex.get(bf);
-    //         byte.push_back(*(unsigned char *)&bf);
-    //         std::cout << (int)*(unsigned char *)&bf<< "|";
-    //     }
-    //     for (int i=0;i<pad;i++) {
-    //         tex.get(bf);
-    //         byte.push_back(0);
-    //         std::cout << "pad ";
-    //     }
-    //     std::cout << std::endl;
-
-    // }
     byte.clear();
     while (tex.get(bf)) {
         byte.push_back(*(unsigned char *)&bf);
     }
     tex.close();
-    // std::cout << byte.size() << std::endl;
-    // std::cout << width << height << std::endl;
 
     int pad = (4 - width * 3 % 4) % 4 + width * 3;
     if ((unsigned long)(pad * height) != byte.size()) {
@@ -694,13 +529,6 @@ int loadtexture(char *file) {
             byte[beg + 2] = sw;
         }
     }
-
-    // textbyte.data();
-    // std::cout << w << " " << h << " " << cn << std::endl;
-    // int text;
-    // for (text = 0; text < 50; text++) {
-    //     std::cout << text << " " << (int)bytes[text*3] << " " << (int)bytes[text*3+1] << " " << (int)bytes[text*3+2] << std::endl;
-    // }
 
     glGenTextures(1, &texid);
 
@@ -775,7 +603,6 @@ int main(int ac, char **av) {
 
     theta = 0.0f;
     dcam = dcamo;
-    std::cout << dcamo << std::endl;
     key_esc = false;
     key_r = false;
     tratio = 0.0f;
