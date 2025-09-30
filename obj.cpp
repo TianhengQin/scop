@@ -81,7 +81,7 @@ int loadfile(char *file) {
     v3 vec;
     float w;
 
-    std::cout<<"Loading file :"<< file <<std::endl;
+    std::cout<<"Loading file : "<< file <<std::endl;
     obj.open(file);
     if (!obj.is_open()) {
         std::cout<<"Failed" <<std::endl;
