@@ -125,16 +125,17 @@ int loadfile(char *file) {
         it->x -= xshift;
         it->y -= yshift;
         it->z -= zshift;
-        if (abs(it->x) > dcamo) {
-            dcamo = abs(it->x);
+        if (std::abs(it->x) > dcamo) {
+            dcamo = std::abs(it->x);
         }
-        if (abs(it->y) > dcamo) {
-            dcamo = abs(it->y);
+        if (std::abs(it->y) > dcamo) {
+            dcamo = std::abs(it->y);
         }
-        if (abs(it->z) > dcamo) {
-            dcamo = abs(it->z);
+        if (std::abs(it->z) > dcamo) {
+            dcamo = std::abs(it->z);
         }
     }
+    std::cout << dcamo << std::endl;
     dcamo *= 2.0f;
     dshift = dcamo / 200.0f;
 
