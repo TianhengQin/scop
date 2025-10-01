@@ -135,7 +135,6 @@ int loadfile(char *file) {
             dcamo = std::abs(it->z);
         }
     }
-    std::cout << dcamo << std::endl;
     dcamo *= 2.0f;
     dshift = dcamo / 200.0f;
 
