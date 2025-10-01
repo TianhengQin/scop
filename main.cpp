@@ -15,7 +15,7 @@ int main(int ac, char **av) {
         return 1;
     }
 
-    glchangeversion();
+    // glchangeversion();
 
     GLFWwindow *window = glfwCreateWindow(720, 720, "scop", NULL, NULL);
 
